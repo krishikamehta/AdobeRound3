@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .input-form, .output-container {
+            margin-top: 20px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input[type="text"], textarea, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .loading {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .output-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .output-metadata p {
+            line-height: 1.6;
+            margin: 5px 0;
+        }
+        .output-list {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+        .output-list li {
+            background-color: #ecf0f1;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .output-list li strong {
+            color: #2c3e50;
+        }
+        .output-list li .rank {
+            background-color: #34495e;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .collapsible {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+        .collapsible:hover {
+            background-color: #2980b9;
+        }
+        .collapsible-content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #f1f1f1;
+            border-radius: 0 0 6px 6px;
+        }
+        .collapsible-content p {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Analyzer</h1>
+        <form id="uploadForm" class="input-form">
+            <label for="folder">Upload Folder (PDFs)</label>
+            <input type="file" id="folder" name="folder" webkitdirectory directory multiple required>
+            
+            <label for="persona">Persona</label>
+            <input type="text" id="persona" name="persona" placeholder="e.g., Travel Planner" required>
+            
+            <label for="task">Task</label>
+            <textarea id="task" name="task" rows="3" placeholder="e.g., Plan a trip of 4 days for a group of 10 college friends." required></textarea>
+            
+            <button type="submit">Analyze Documents</button>
+        </form>
+
+        <div id="status" class="loading" style="display: none;">Processing your request...</div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="output" class="output-container" style="display: none;">
+            <h2>Analysis Results</h2>
+
+            <div class="output-section">
+                <h3>Request Details</h3>
+                <div class="output-metadata">
+                    <p><strong>Persona:</strong> <span id="output-persona"></span></p>
+                    <p><strong>Task:</strong> <span id="output-task"></span></p>
+                    <p><strong>Input Documents:</strong> <span id="output-docs"></span></p>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h3>Top 10 Extracted Sections</h3>
+                <ul id="extracted-sections-list" class="output-list">
+                    </ul>
+            </div>
+
+            <div class="output-section">
+                <h3>Detailed Sub-Section Analysis</h3>
+                <div id="subsection-analysis-container">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const statusDiv = document.getElementById('status');
+            const errorDiv = document.getElementById('error');
+            const outputDiv = document.getElementById('output');
+            const form = event.target;
+
+            statusDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            outputDiv.style.display = 'none';
+
+            const formData = new FormData();
+            const folderInput = document.getElementById('folder');
+            const files = folderInput.files;
+            
+            if (files.length === 0) {
+                errorDiv.textContent = 'Please select a folder with PDF documents.';
+                errorDiv.style.display = 'block';
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i], files[i].webkitRelativePath);
+            }
+
+            const metadata = {
+                persona: form.elements['persona'].value,
+                job_to_be_done: form.elements['task'].value
+            };
+            formData.append('metadata', JSON.stringify(metadata));
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    throw new Error(result.error || 'Something went wrong.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = 'An error occurred: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                statusDiv.style.display = 'none';
+            }
+        });
+
+        function displayResults(data) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.style.display = 'block';
+
+            document.getElementById('output-persona').textContent = data.metadata.persona;
+            document.getElementById('output-task').textContent = data.metadata.job_to_be_done;
+            document.getElementById('output-docs').textContent = data.metadata.input_documents.join(', ');
+
+            const extractedList = document.getElementById('extracted-sections-list');
+            extractedList.innerHTML = '';
+            data.extracted_sections.forEach(section => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div>
+                        <strong>${section.section_title}</strong><br>
+                        <em>Document: ${section.document} (Page ${section.page_number})</em>
+                    </div>
+                    <span class="rank">${section.importance_rank}</span>
+                `;
+                extractedList.appendChild(li);
+            });
+
+            const subSectionContainer = document.getElementById('subsection-analysis-container');
+            subSectionContainer.innerHTML = '';
+            data.subsection_analysis.forEach(analysis => {
+                const button = document.createElement('button');
+                button.className = 'collapsible';
+                button.textContent = `${analysis.refined_text.substring(0, 70)}... (from ${analysis.document}, Page ${analysis.page_number})`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'collapsible-content';
+                const p = document.createElement('p');
+                p.textContent = analysis.refined_text;
+                contentDiv.appendChild(p);
+
+                subSectionContainer.appendChild(button);
+                subSectionContainer.appendChild(contentDiv);
+
+                button.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const content = this.nextElementSibling;
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
